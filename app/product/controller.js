@@ -2,10 +2,31 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const Product = require('./model');
+const Category = require('../category/model');
+const Tag = require('../tag/model');
 
 const store = async (req, res, next) => {
   try {
     let payload = req.body;
+
+    if(payload.category) {
+      const category = await Category.findOne({ name: { $regex: payload.category, $options: 'i' } });
+      if(category) {
+        payload = { ...payload, category: category._id }
+      } else {
+        delete payload.category;
+      };
+    };
+
+    if(payload.tags && payload.tags.length > 0) {
+      const tags = await Tag.find({ name: { $in: payload.tags } });
+      if(tags.length > 0) {
+        payload = { ...payload, tags: tags.map((tag) => tag._id) };
+      } else {
+        delete payload.tags;
+      }
+    };
+
     if(req.file) {
       let tmp_path = req.file.path;
       let originalExt = req.file.originalname.split('.').pop();
@@ -63,7 +84,12 @@ const store = async (req, res, next) => {
 const index = async (req, res, next) => {
   try {
     const { skip = 0, limit = 10 } = req.query;
-    const products = await Product.find().skip(parseInt(skip)).limit(parseInt(limit));
+    const products = await Product
+      .find()
+      .skip(parseInt(skip))
+      .limit(parseInt(limit))
+      .populate('category')
+      .populate('tags');
     return res.json({
       message: 'Products fetched!',
       data: products
@@ -77,6 +103,24 @@ const update = async (req, res, next) => {
   try {
     let { id } = req.params;
     let payload = req.body;
+
+    if(payload.category) {
+      const category = await Category.findOne({ name: { $regex: payload.category, $options: 'i' } });
+      if(category) {
+        payload = { ...payload, category: category._id }
+      } else {
+        delete payload.category;
+      };
+    };
+
+    if(payload.tags && payload.tags.length > 0) {
+      const tags = await Tag.find({ name: { $in: payload.tags } });
+      if(tags.length > 0) {
+        payload = { ...payload, tags: tags.map((tag) => tag._id) };
+      } else {
+        delete payload.tags;
+      }
+    };
 
     if(req.file) {
       let tmp_path = req.file.path;
