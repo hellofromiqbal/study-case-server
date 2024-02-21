@@ -60,4 +60,20 @@ const store = async (req, res, next) => {
   };
 };
 
-module.exports = { store };
+const index = async (req, res, next) => {
+  try {
+    const { skip = 0, limit = 10 } = req.query;
+    const products = await Product.find().skip(parseInt(skip)).limit(parseInt(limit));
+    return res.json({
+      message: 'Products fetched!',
+      data: products
+    });
+  } catch (error) {
+    next(error);
+  };
+};
+
+module.exports = {
+  store,
+  index
+};
