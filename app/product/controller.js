@@ -143,8 +143,26 @@ const update = async (req, res, next) => {
   };
 };
 
+const destroy = async (req,res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndDelete(id);
+    const productImage = `${config.rootPath}/public/images/products/${product.image_url}`;
+    if(fs.existsSync(productImage)) {
+      fs.unlinkSync(productImage);
+    };
+    return res.json({
+      message: 'Product deleted successfully!',
+      data: product
+    });
+  } catch (error) {
+    next(error);
+  };
+};
+
 module.exports = {
   store,
   index,
-  update
+  update,
+  destroy
 };
