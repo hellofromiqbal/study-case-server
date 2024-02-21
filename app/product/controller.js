@@ -90,6 +90,11 @@ const update = async (req, res, next) => {
 
       src.on('end', async () => {
         try {
+          const product = await Product.findById(id);
+          const currentProductImage = `${config.rootPath}/public/images/products/${product.image_url}`;
+          if(fs.existsSync(currentProductImage)) {
+            fs.unlinkSync(currentProductImage);
+          };
           let newProduct = await Product.findByIdAndUpdate(
             id,
             { ...payload, image_url: filename },
